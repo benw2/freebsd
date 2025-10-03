@@ -1,5 +1,10 @@
 #!/bin/sh
+swap_size="2G"
+zroot_size="10G"
+
 camcontrol devlist
+
+echo "Setting up ZFS drive, with a swap of ${swap_size} and zroot of ${zroot_size}..."
 
 # Prompt for user input, save it in the disk variable
 read -p "Enter the disk to partition (e.g., ada0): " disk
@@ -19,9 +24,9 @@ umount /mnt
 
 echo "Setting up SWAP and ZFS partitions..."
 
-gpart add -a 1m -s 32G -t freebsd-swap -l swap0    ${disk}
-gpart add -a 1m -s 60G -t freebsd-zfs  -l zroot    ${disk}
-gpart add -a 1m        -t freebsd-zfs  -l zrootenc ${disk}
+gpart add -a 1m -s ${swap_size}  -t freebsd-swap -l swap0    ${disk}
+gpart add -a 1m -s ${zroot_size} -t freebsd-zfs  -l zroot    ${disk}
+gpart add -a 1m                  -t freebsd-zfs  -l zrootenc ${disk}
 
 # Setup ZFS
 gpart show ${disk}
