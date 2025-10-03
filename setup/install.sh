@@ -1,6 +1,6 @@
 #!/bin/sh
 swap_size="2G"
-zroot_size="10G"
+zroot_size="8G"
 
 camcontrol devlist
 
