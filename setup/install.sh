@@ -31,5 +31,49 @@ gpart add -a 1m                  -t freebsd-zfs  -l zrootenc ${disk}
 # Setup ZFS
 gpart show ${disk}
 
+echo "Going to create zpool on /dev/${disk}p3 in 10 seconds... if this does not look correct, hit Ctrl-C now!"
 sleep 10
+
+# Mount a tmpfs to /mnt
+mount -t tmpfs tmpfs /mnt
+
+echo "Creating ZFS pool and datasets on ${disk}p3..."
+
+zpool create -o ashift=12 -o altroot=/mnt zroot ${disk}p3
+
+zfs set compress=on                                            zroot
+
+zfs create -o mountpoint=none                                  zroot/ROOT
+zfs create -o mountpoint=/                                     zroot/ROOT/default
+zfs create -o mountpoint=/home                                 zroot/home
+zfs create -o mountpoint=/tmp -o exec=on -o setuid=off         zroot/tmp
+zfs create -o mountpoint=/usr -o canmount=off                  zroot/usr
+zfs create -o setuid=off                                       zroot/usr/ports
+zfs create                                                     zroot/usr/src
+zfs create -o mountpoint=/var -o canmount=off                  zroot/var
+zfs create -o exec=off -o setuid=off                           zroot/var/audit
+zfs create -o exec=off -o setuid=off                           zroot/var/crash
+zfs create -o exec=off -o setuid=off                           zroot/var/log
+zfs create -o atime=on                                         zroot/var/mail
+zfs create -o setuid=off                                       zroot/var/tmp
+
+zfs set mountpoint=/zroot zroot
+
+chmod 1777 /mnt/tmp/
+
+mkdir -p /mnt/var/tmp
+chmod 1777 /mnt/var/tmp
+
+zpool set bootfs=zroot/ROOT/default zroot
+
+mkdir -p /mnt/boot/zfs
+
+zpool set cachefile=/mnt/boot/zfs/zpool.cache  zroot
+zfs   set canmount=noauto                      zroot/ROOT/default
+
+ cat << EOF > /tmp/bsdinstall_etc/fstab
+ # Device                       Mountpoint              FStype  Options         Dump    Pass#
+ /dev/gpt/swap0                 none                    swap    sw              0       0
+ EOF
+
 
