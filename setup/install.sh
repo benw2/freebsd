@@ -31,6 +31,8 @@ gpart add -a 1m                  -t freebsd-zfs  -l zrootenc ${disk}
 # Setup ZFS
 gpart show ${disk}
 
+sleep 10
+
 # Mount a tmpfs to /mnt
 mount -t tmpfs tmpfs /mnt
 
